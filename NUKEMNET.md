@@ -1,10 +1,12 @@
-# NukemNet demo multiplayer build
+# NukemNet Carmageddon build
 
 Version: **0.10.1-nn1**, based on Dethrace v0.10.1
 (`9fa3bb2b550e9ab8784134c2ba9781c28c50427b`).
 This is an independent modification, not an official Dethrace release.
 The original Dethrace licence and bundled dependency notices still apply.
-No Carmageddon game data is included in this repository or the engine download.
+No Carmageddon game data is included in this repository. Demo download packages
+include their matching original demo files and notices; the full-version download
+is engine-only and requires the player’s own game data.
 
 ## Demo editions
 
@@ -29,9 +31,9 @@ offered yet. Other platforms can build from source; they are not tested here.
 ## Using NukemNet
 
 1. Choose Carmageddon, then the SCi or Interplay Dethrace demo in Settings → Games.
-2. Download the NN engine, then specify your extracted demo in **Demo data folder**
-   when hosting/joining. Alternatively, put the demo's `DATA` directory and
-   identifying file beside `dethrace-nn`.
+2. Download the complete demo + NN engine package. NN configures the installation
+   automatically. For a manual installation, select the folder containing
+   `dethrace-nn`, `nn-dethrace.json` and `DATA`. There is no data-folder game parameter.
 3. Join the same NukemNet room and select the room's connection method. NN carries
    Dethrace discovery and player traffic through its UDP tunnel and relay.
 4. Start the game in NN. Host and clients enter the game lobby automatically.
@@ -39,6 +41,15 @@ offered yet. Other platforms can build from source; they are not tested here.
    **Start Without Them** (SCi's original button label).
 5. Accelerate with numpad 8. The host uses the Eagle; guests automatically select
    an unused included car. There are six available cars and the CITYB3 track.
+
+Choose **Singleplayer** in NN to play either demo normally. NN omits all demo
+network arguments in that mode; select New Game in the game's menu.
+
+For **Dethrace — Full version**, select a complete original Carmageddon installation
+with this engine beside its DATA folder. The full game uses its ordinary menus:
+New Network Game → Host Game, or select a host's session to join. The normal car,
+race and game-mode choices remain available. Full-game single-player is also
+exposed in NN. Full game assets are never included in a download.
 
 Do not run two game processes on the same local network interface: Dethrace's
 discovery port is UDP 12286. Tests use separate network namespaces. The NN
@@ -106,9 +117,10 @@ ctest --test-dir build --output-on-failure
 
 ## Validation and limits
 
-Both SCi and Interplay were tested with two separate NukemNet instances on
-Linux x64, entering a checkpoint race and driving both cars with remote movement
-visible. Direct client-to-client forwarding was blocked; traffic used NN's UDP
+SCi, Interplay and the full European 1999-05-12 rerelease were tested with two
+separate NukemNet instances on
+Linux x64, entering actual races and driving both cars. The demos used checkpoint
+races; the full release used Car Crusher on Ridge Racer. Direct client-to-client forwarding was blocked; traffic used NN's UDP
 relay, with about 60 ms simulated round-trip delay. Packet captures recorded
 game traffic through the relay, with no kernel capture drops.
 
