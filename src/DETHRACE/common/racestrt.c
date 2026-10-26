@@ -2904,6 +2904,18 @@ tSO_result NetSynchRaceStart2(tNet_synch_mode pMode) {
     };
     int result;
 
+    if (harness_game_info.sci_demo) {
+        // The early demo's buttons are part of the background, at older positions.
+        // Later button animations do not fit this artwork.
+        interface_spec_hf.number_of_button_flics = 0;
+        interface_spec_hs.number_of_button_flics = 0;
+        interface_spec_c.number_of_button_flics = 0;
+        mouse_areas_hf[0] = (tMouse_area){ { 219, 438 }, { 158, 316 }, { 282, 564 }, { 174, 348 }, 0, 0, 0, NULL };
+        mouse_areas_hf[1] = (tMouse_area){ { 60, 120 }, { 158, 316 }, { 177, 354 }, { 174, 348 }, 1, 0, 0, NULL };
+        mouse_areas_hs[0] = mouse_areas_hf[0];
+        mouse_areas_c[0] = mouse_areas_hf[0];
+    }
+
     if (pMode != eNet_synch_client) {
         if (gCurrent_net_game->status.stage == eNet_game_starting) {
             gCurrent_net_game->status.stage = eNet_game_ready;

@@ -1,4 +1,5 @@
 #include "world.h"
+#include "harness/config.h"
 #include <stdlib.h>
 
 #include "brender.h"
@@ -3139,9 +3140,12 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
     } else {
         gYon_multiplier = GetAScalar(f);
     }
-    GetAString(f, s);
-    if (strcmp(s, pFile_name) != 0) {
-        FatalError(kFatalError_FileCorrupt_S, pFile_name);
+    // The original SCi demo ends after its splash list, without this footer.
+    if (!harness_game_info.sci_demo) {
+        GetAString(f, s);
+        if (strcmp(s, pFile_name) != 0) {
+            FatalError(kFatalError_FileCorrupt_S, pFile_name);
+        }
     }
     fclose(f);
 #ifdef DETHRACE_3DFX_PATCH

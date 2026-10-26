@@ -159,6 +159,7 @@ static void Harness_DetectGameMode(void) {
             harness_game_info.defines.INTRO_SMK_FILE = "";
             harness_game_info.defines.GERMAN_LOADSCRN = "COWLESS.PIX";
             harness_game_info.mode = eGame_carmageddon_demo;
+            harness_game_info.sci_demo = access("CARMDEMO.EXE", F_OK) == 0 && access("CARMDEMO.BAT", F_OK) != 0;
             printf("Game mode: Carmageddon demo\n");
         } else {
             goto carmageddon;
@@ -295,6 +296,7 @@ int Harness_Init(int* argc, char* argv[]) {
     harness_game_config.sound_options = 0;
     // Skip binding socket to allow local network testing
     harness_game_config.no_bind = 0;
+    harness_game_config.nn_demo_car = -1;
     // Disable verbose logging
     harness_game_config.verbose = 0;
 
@@ -434,6 +436,18 @@ int Harness_ProcessCommandLine(int* argc, char* argv[]) {
         } else if (strcasecmp(argv[i], "--no-bind") == 0) {
             harness_game_config.no_bind = 1;
             consumed = 1;
+        } else if (strcasecmp(argv[i], "--nn-demo-host") == 0) {
+            harness_game_config.nn_demo_network = 1;
+            consumed = 1;
+        } else if (strcasecmp(argv[i], "--nn-demo-join") == 0) {
+            harness_game_config.nn_demo_network = 2;
+            consumed = 1;
+        } else if (strcasecmp(argv[i], "--nn-demo-car") == 0 && i + 1 < *argc) {
+            harness_game_config.nn_demo_car = atoi(argv[i + 1]);
+            consumed = 2;
+        } else if (strcasecmp(argv[i], "--nn-demo-name") == 0 && i + 1 < *argc) {
+            snprintf(harness_game_config.nn_demo_name, sizeof(harness_game_config.nn_demo_name), "%.13s", argv[i + 1]);
+            consumed = 2;
         } else if (strstr(argv[i], "--network-adapter-name") != NULL) {
             if (i < *argc + 1) {
                 safe_strcpy(harness_game_config.network_adapter_name, argv[i + 1]);

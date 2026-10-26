@@ -6,6 +6,7 @@
 #include "globvars.h"
 #include "graphics.h"
 #include "harness/trace.h"
+#include "harness/config.h"
 #include "input.h"
 #include "loading.h"
 #include "main.h"
@@ -764,7 +765,7 @@ int StartFlic(char* pFile_name, int pIndex, tFlic_descriptor_ptr pFlic_info, tU3
     int total_size;
 
     if (gPlay_from_disk) {
-        PathCat(the_path, gApplication_path, "ANIM");
+        PathCat(the_path, gApplication_path, harness_game_info.sci_demo ? "32X20X8/ANIM" : "ANIM");
         PathCat(the_path, the_path, pFile_name);
         pFlic_info->f = DRfopen(the_path, "rb");
 
@@ -1608,7 +1609,7 @@ int LoadFlic(int pIndex) {
         return 1;
     }
     PossibleService();
-    PathCat(the_path, gApplication_path, "ANIM");
+    PathCat(the_path, gApplication_path, harness_game_info.sci_demo ? "32X20X8/ANIM" : "ANIM");
     PathCat(the_path, the_path, gMain_flic_list[pIndex].file_name);
     f = DRfopen(the_path, "rb");
 
@@ -1659,7 +1660,7 @@ int LoadFlicData(char* pName, tU8** pData, tU32* pData_length) {
         return 1;
     }
     PossibleService();
-    PathCat(the_path, gApplication_path, "ANIM");
+    PathCat(the_path, gApplication_path, harness_game_info.sci_demo ? "32X20X8/ANIM" : "ANIM");
     PathCat(the_path, the_path, pName);
     f = DRfopen(the_path, "rb");
     if (f == NULL) {

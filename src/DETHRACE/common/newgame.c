@@ -1813,6 +1813,95 @@ void DisposeNetStorageSpace(void) {
     gNet_storage_allocated = 0;
 }
 
+int StartNNDemoGame(void) {
+    static const int demo_cars[] = {0, 19, 7, 22, 12, 16};
+    tNet_game_options options = {0};
+    tNet_game_details* game = NULL;
+    tU32 deadline;
+    int i, attempt, result;
+    int car = harness_game_config.nn_demo_car;
+    int joining = harness_game_config.nn_demo_network == 2;
+    if (harness_game_info.mode != eGame_carmageddon_demo || gNumber_of_racers <= 22) {
+        PDFatalError("NukemNet demo multiplayer requires a complete SCi or Interplay Carmageddon demo.");
+    }
+    if (car != -1) {
+        for (i = 0; i < COUNT_OF(demo_cars) && demo_cars[i] != car; i++) {}
+        if (i == COUNT_OF(demo_cars)) PDFatalError("Choose a car included in the demo: 0, 19, 7, 22, 12 or 16.");
+    }
+    if (NetInitialise()) return 0;
+    gSynch_race_start = 0;
+    gPending_race = -1;
+    gCurrent_race.number_of_racers = 0;
+    gProgram_state.frank_or_anniness = eFrankie;
+    AboutToLoadFirstCar();
+    InitNetStorageSpace();
+    strcpy(gProgram_state.player_name[0], harness_game_config.nn_demo_name[0]
+        ? harness_game_config.nn_demo_name : joining ? "NN Guest" : "NN Host");
+    LoadRaces(gRace_list, &gNumber_of_races, eNet_game_type_checkpoint);
+    if (joining) {
+        InitGamesToJoin();
+        NetStartProducingJoinList(AddToJoinList);
+        deadline = PDGetTotalTime() + 60000;
+        while (gGames_to_join[0].game == NULL && PDGetTotalTime() < deadline) {
+            NetService(0);
+            PDServiceSystem(0);
+            gHarness_platform.Sleep(2);
+        }
+        game = gGames_to_join[0].game;
+        gGames_to_join[0].game = NULL;
+        NetEndJoinList();
+        DisposeJoinList(-1);
+        if (game == NULL) PDFatalError("No NukemNet demo host was found within 60 seconds.");
+        gNet_options = &game->options;
+        for (attempt = 0; attempt < 6; attempt++) {
+            if (harness_game_config.nn_demo_car < 0) {
+                RequestCarDetails(game);
+                deadline = PDGetTotalTime() + 10000;
+                while (!gReceived_car_details && PDGetTotalTime() < deadline) {
+                    NetService(0);
+                    PDServiceSystem(0);
+                    gHarness_platform.Sleep(2);
+                }
+                gNet_mode = eNet_mode_none;
+                if (!gReceived_car_details) PDFatalError("The NukemNet demo host did not answer the car request.");
+                car = -1;
+                for (i = 0; i < COUNT_OF(demo_cars); i++) {
+                    if (gCar_details[demo_cars[i]].ownership == eCar_owner_none) {
+                        car = demo_cars[i];
+                        break;
+                    }
+                }
+                if (car < 0) PDFatalError("All six demo cars are already in use.");
+            }
+            result = NetJoinGame(game, gProgram_state.player_name[0], car);
+            if (result != -4) break;
+        }
+        if (result != 0) PDFatalError("Could not join the NukemNet demo host. Check the room connection and engine version.");
+    } else {
+        if (car < 0) car = 0;
+        options.show_players_on_map = 1;
+        options.show_peds_on_map = 1;
+        options.enable_text_messages = 1;
+        options.powerup_respawn = 1;
+        options.open_game = 1;
+        options.starting_money_index = 2;
+        options.grid_start = 1;
+        options.race_sequence_type = eNet_sequence_sequential;
+        options.car_choice = eNet_car_all;
+        SetNetAvailability(&options);
+        for (i = 0; i < gNumber_of_racers; i++) gCar_details[i].ownership = eCar_owner_not_allowed;
+        for (i = 0; i < COUNT_OF(demo_cars); i++) gCar_details[demo_cars[i]].ownership = eCar_owner_none;
+        gCar_details[car].ownership = eCar_owner_someone;
+        game = NetHostGame(eNet_game_type_checkpoint, &options, 0, gProgram_state.player_name[0], car);
+        if (game == NULL) {
+            return 0;
+        }
+    }
+    SetUpOtherNetThings(game);
+    ReenableNetService();
+    return 1;
+}
+
 // IDA: int __cdecl DoMultiPlayerStart()
 // FUNCTION: CARM95 0x004b27a7
 int DoMultiPlayerStart(void) {

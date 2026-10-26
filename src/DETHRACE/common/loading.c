@@ -451,7 +451,7 @@ void LoadGeneralParameters(void) {
     GetThreeFloats(f, &gRecovery_cost[0], &gRecovery_cost[1], &gRecovery_cost[2]);
     GetThreeInts(f, &gPed_time_value[0], &gPed_time_value[1], &gPed_time_value[2]);
     if (gProgram_state.sausage_eater_mode) {
-        for (i = 0; i < 7; i++) {
+        for (i = 0; i < (harness_game_info.sci_demo ? 6 : 7); i++) {
             GetALineAndDontArgue(f, s);
         }
 
@@ -461,7 +461,7 @@ void LoadGeneralParameters(void) {
         GetThreeInts(f, gWasted_creds, &gWasted_creds[1], &gWasted_creds[2]);
         GetThreeInts(f, gRoll_over_time, &gRoll_over_time[1], &gRoll_over_time[2]);
         GetThreeInts(f, gRoll_over_creds, &gRoll_over_creds[1], &gRoll_over_creds[2]);
-        GetThreeInts(f, gCheck_point_cash, &gCheck_point_cash[1], &gCheck_point_cash[2]);
+        if (!harness_game_info.sci_demo) GetThreeInts(f, gCheck_point_cash, &gCheck_point_cash[1], &gCheck_point_cash[2]);
     } else {
         GetThreeFloats(f, gCar_time_value, &gCar_time_value[1], &gCar_time_value[2]);
         GetThreeFloats(f, gCar_cred_value, &gCar_cred_value[1], &gCar_cred_value[2]);
@@ -469,8 +469,8 @@ void LoadGeneralParameters(void) {
         GetThreeInts(f, gWasted_creds, &gWasted_creds[1], &gWasted_creds[2]);
         GetThreeInts(f, gRoll_over_time, &gRoll_over_time[1], &gRoll_over_time[2]);
         GetThreeInts(f, gRoll_over_creds, &gRoll_over_creds[1], &gRoll_over_creds[2]);
-        GetThreeInts(f, gCheck_point_cash, &gCheck_point_cash[1], &gCheck_point_cash[2]);
-        for (i = 0; i < 7; i++) {
+        if (!harness_game_info.sci_demo) GetThreeInts(f, gCheck_point_cash, &gCheck_point_cash[1], &gCheck_point_cash[2]);
+        for (i = 0; i < (harness_game_info.sci_demo ? 6 : 7); i++) {
             GetALineAndDontArgue(f, s);
         }
     }
@@ -487,10 +487,11 @@ void LoadGeneralParameters(void) {
     ParseSpecialVolume(f, &gDefault_default_water_spec_vol, gDef_def_water_screen_name);
     GetALineAndDontArgue(f, s);
     str = strtok(s, "\t ,/");
-    for (i = 0; i < 5; i++) {
+    for (i = harness_game_info.sci_demo ? 1 : 0; i < (harness_game_info.sci_demo ? 4 : 5); i++) {
         sscanf(str, "%d", &gInitial_net_credits[i]);
         str = strtok(NULL, "\t ,/");
     }
+    if (harness_game_info.sci_demo) gInitial_net_credits[4] = 20000;
 
     gTag_start_time = 1000 * GetAnInt(f);
     gFox_start_time = 1000 * GetAnInt(f);
@@ -513,21 +514,31 @@ void LoadGeneralParameters(void) {
         sscanf(str, "%f", &gNet_softness[i]);
         str = strtok(NULL, "\t ,/");
     }
-    GetALineAndDontArgue(f, s);
-    str = strtok(s, "\t ,/");
-    for (i = 0; i < 7; i++) {
-        sscanf(str, "%f", &gNet_offensive[i]);
-        str = strtok(NULL, "\t ,/");
-    }
-    GetALineAndDontArgue(f, s);
-    str = strtok(s, "\t ,/");
-    for (i = 0; i < 7; i++) {
-        sscanf(str, "%d", &gNet_target[i]);
-        str = strtok(NULL, "\t ,/");
-    }
+    if (harness_game_info.sci_demo) {
+        static const int targets[7] = {0, 3, 50, 0, 0, 60, 240};
+        for (i = 0; i < 7; i++) {
+            gNet_offensive[i] = 1.0f;
+            gNet_target[i] = targets[i];
+        }
+        gMin_respawn_time = 90000;
+        gRespawn_variance = 60000;
+    } else {
+        GetALineAndDontArgue(f, s);
+        str = strtok(s, "\t ,/");
+        for (i = 0; i < 7; i++) {
+            sscanf(str, "%f", &gNet_offensive[i]);
+            str = strtok(NULL, "\t ,/");
+        }
+        GetALineAndDontArgue(f, s);
+        str = strtok(s, "\t ,/");
+        for (i = 0; i < 7; i++) {
+            sscanf(str, "%d", &gNet_target[i]);
+            str = strtok(NULL, "\t ,/");
+        }
 
-    gMin_respawn_time = 1000 * GetAnInt(f);
-    gRespawn_variance = 1000 * GetAnInt(f);
+        gMin_respawn_time = 1000 * GetAnInt(f);
+        gRespawn_variance = 1000 * GetAnInt(f);
+    }
     gDemo_rank = GetAnInt(f);
     gDemo_armour = GetAnInt(f);
     gDemo_power = GetAnInt(f);
@@ -813,6 +824,10 @@ void LoadKeyMapping(void) {
     PathCat(the_path, gApplication_path, "KEYMAP_X.TXT");
     the_path[strlen(the_path) - 5] = '0' + gKey_map_index;
     f = DRfopen(the_path, "rt");
+    if (f == NULL && harness_game_info.sci_demo) {
+        PathCat(the_path, gApplication_path, "KEYMAP.TXT");
+        f = DRfopen(the_path, "rt");
+    }
     if (f == NULL) {
         FatalError(kFatalError_OpenKeyMapFile);
     }
@@ -829,6 +844,17 @@ void LoadKeyMapping(void) {
 void LoadInterfaceStuff(int pWithin_race) {
     tPath_name path;
     int i;
+
+    if (harness_game_info.sci_demo) {
+        for (i = 0; i < 8; i++) {
+            if (gCursors[i] == NULL) {
+                sprintf(path, i < 4 ? "HAND%d.PIX" : "HANDP%d.PIX", i % 4);
+                gCursors[i] = LoadPixelmap(path);
+                if (gCursors[i] == NULL) FatalError(kFatalError_LoadCursorImage);
+            }
+        }
+        return; /* SCi has individual cursor frames and no cursor-giblet sheet. */
+    }
 
     if (gProgram_state.sausage_eater_mode) {
         strcpy(path, "GHANDX.PIX");
@@ -1936,7 +1962,8 @@ void LoadCar(char* pCar_name, tDriver pDriver, tCar_spec* pCar_spec, int pOwner,
     }
     PathCat(the_path, gApplication_path, gGraf_specs[gGraf_spec_index].data_dir_name);
     PathCat(the_path, the_path, "CARS");
-    PathCat(the_path, the_path, pCar_name);
+    // SCi only includes a complete cockpit for the Eagle.
+    PathCat(the_path, the_path, harness_game_info.sci_demo && harness_game_config.nn_demo_network ? gBasic_car_names[0] : pCar_name);
     AllowOpenToFail();
     h = DRfopen(the_path, "rt");
     DoNotAllowOpenToFail();
@@ -1950,8 +1977,8 @@ void LoadCar(char* pCar_name, tDriver pDriver, tCar_spec* pCar_spec, int pOwner,
         }
     }
     GetAString(f, s);
-    strcpy(pCar_spec->name, s);
-    if (strcmp(s, pCar_name) != 0) {
+    strcpy(pCar_spec->name, harness_game_info.sci_demo ? pCar_name : s);
+    if (!harness_game_info.sci_demo && strcmp(s, pCar_name) != 0) {
         FatalError(kFatalError_FileCorrupt_S, pCar_name);
     }
     if (*pDriver_name != '\0') {
@@ -2230,7 +2257,9 @@ void LoadCar(char* pCar_name, tDriver pDriver, tCar_spec* pCar_spec, int pOwner,
     }
     LoadSomeShadeTables(pStorage_space, f);
     old_material_count = pStorage_space->materials_count;
-    if (gAusterity_mode) {
+    if (harness_game_info.sci_demo) {
+        LoadSomeMaterials(pStorage_space, f);
+    } else if (gAusterity_mode) {
         LoadSomeMaterials(pStorage_space, f);
         SkipNLines(f);
         SkipNLines(f);
@@ -2599,6 +2628,9 @@ void LoadRaces(tRace_list_spec* pRace_list, int* pCount, int pRace_type_index) {
     char* str;
 
     gCurrent_race_file_index = pRace_type_index + 1;
+    if (harness_game_config.nn_demo_network) {
+        gCurrent_race_file_index = 0;
+    }
     f = OpenRaceFile();
     i = 0;
 
@@ -2615,6 +2647,9 @@ void LoadRaces(tRace_list_spec* pRace_list, int* pCount, int pRace_type_index) {
 
     *pCount = i;
     fclose(f);
+    if (harness_game_config.nn_demo_network) {
+        *pCount = 1; /* Only CITYB3 is included with the Carmageddon demos. */
+    }
 
 #ifdef DETHRACE_FIX_BUGS
     if (harness_game_info.mode == eGame_carmageddon_demo || harness_game_info.mode == eGame_splatpack_demo || harness_game_info.mode == eGame_splatpack_xmas_demo) {
@@ -2640,7 +2675,7 @@ void LoadRaces(tRace_list_spec* pRace_list, int* pCount, int pRace_type_index) {
     }
 
     pRace_list[*pCount - 1].rank_required = 1;
-    if (pRace_list[*pCount - 2].rank_required == 1) {
+    if (*pCount > 1 && pRace_list[*pCount - 2].rank_required == 1) {
         --*pCount;
     }
 
@@ -2876,7 +2911,8 @@ void LoadOpponents(void) {
         GetALineAndDontArgue(f, gOpponents[i].abbrev_name);
         gOpponents[i].car_number = GetAnInt(f);
         gOpponents[i].strength_rating = GetAnInt(f);
-        gOpponents[i].network_availability = GetALineAndInterpretCommand(f, gNet_avail_names, COUNT_OF(gNet_avail_names));
+        gOpponents[i].network_availability = harness_game_info.sci_demo ? eNet_avail_all
+            : GetALineAndInterpretCommand(f, gNet_avail_names, COUNT_OF(gNet_avail_names));
 
         GetALineAndDontArgue(f, s);
         str = strtok(s, "\t ,/");

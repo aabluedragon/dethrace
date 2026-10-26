@@ -1,5 +1,10 @@
 # Dethrace
 
+This is NukemNet's demo multiplayer fork, based on upstream v0.10.1.
+See [NUKEMNET.md](NUKEMNET.md) for SCi/Interplay demo compatibility, launch
+arguments, build instructions and testing limits. The original project is
+[dethrace-labs/dethrace](https://github.com/dethrace-labs/dethrace).
+
 [![Workflow](https://github.com/dethrace-labs/dethrace/actions/workflows/workflow.yaml/badge.svg)](https://github.com/dethrace-labs/dethrace/actions/workflows/workflow.yml)
 [![Twitter](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/dethrace_labs)
 [![Discord Carmageddon server](https://badgen.net/badge/icon/discord?icon=discord&label)](https://discord.gg/f5StsuP)

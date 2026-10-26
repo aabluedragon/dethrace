@@ -35,6 +35,7 @@ typedef struct tHarness_game_info {
         int* ascii_shift_table;
     } defines;
     int data_dir_has_3dfx_assets;
+    int sci_demo;
 } tHarness_game_info;
 
 typedef struct tHarness_game_dir {
@@ -60,6 +61,9 @@ typedef struct tHarness_game_config {
 
     int install_signalhandler;
     int no_bind;
+    int nn_demo_network;
+    int nn_demo_car;
+    char nn_demo_name[14];
     char network_adapter_name[256];
     char platform_name[256];
 

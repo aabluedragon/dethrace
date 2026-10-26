@@ -2969,6 +2969,7 @@ int NewCursorGiblet(int pX_coord, int pY_coord, float pX_speed, float pY_speed, 
     int the_height;
     int sequence_number;
 
+    if (gCursor_giblet_images[0] == NULL) return -1;
     sequence_number = IRandomBetween(0, COUNT_OF(gCursor_giblet_sequences) - 1);
     if (pX_coord >= 0 && pX_coord < gGraf_data[gGraf_data_index].width && pY_coord >= 0 && pY_coord < gGraf_data[gGraf_data_index].height) {
         for (i = 0; i < COUNT_OF(gCursor_giblets); i++) {

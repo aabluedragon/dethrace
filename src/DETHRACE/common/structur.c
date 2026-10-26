@@ -1,4 +1,5 @@
 #include "structur.h"
+#include "newgame.h"
 #include "car.h"
 #include "controls.h"
 #include "crush.h"
@@ -391,7 +392,7 @@ void SelectOpponents(tRace_info* pRace_info) {
 
 #ifdef DETHRACE_FIX_BUGS
     // Adds support for the demo behavior
-    if (harness_game_info.mode == eGame_carmageddon_demo || harness_game_info.mode == eGame_splatpack_demo || harness_game_info.mode == eGame_splatpack_xmas_demo) {
+    if (gNet_mode == eNet_mode_none && (harness_game_info.mode == eGame_carmageddon_demo || harness_game_info.mode == eGame_splatpack_demo || harness_game_info.mode == eGame_splatpack_xmas_demo)) {
         pRace_info->number_of_racers = OPPONENT_COUNT;
         for (i = 0; i < OPPONENT_COUNT; i++) {
             pRace_info->opponent_list[i].index = gDemo_opponents[i];
@@ -647,8 +648,8 @@ void DoGame(void) {
                         }
                         DisposeTrack();
 #ifdef DETHRACE_FIX_BUGS
-                        // demo behavior
-                        if (harness_game_info.mode == eGame_carmageddon_demo || harness_game_info.mode == eGame_splatpack_demo || harness_game_info.mode == eGame_splatpack_xmas_demo) {
+                        // Show the demo advert after single-player, not between network races.
+                        if (gNet_mode == eNet_mode_none && (harness_game_info.mode == eGame_carmageddon_demo || harness_game_info.mode == eGame_splatpack_demo || harness_game_info.mode == eGame_splatpack_xmas_demo)) {
                             DoFullVersionPowerpoint();
                         }
 #endif
@@ -698,6 +699,9 @@ void InitialiseProgramState(void) {
 // FUNCTION: CARM95 0x00414d8a
 void DoProgram(void) {
     InitialiseProgramState();
+    if (harness_game_config.nn_demo_network) {
+        gProgram_state.prog_status = StartNNDemoGame() ? eProg_game_starting : eProg_quit;
+    }
     do {
         switch (gProgram_state.prog_status) {
         case eProg_intro:

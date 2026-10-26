@@ -177,4 +177,6 @@ void DisposeNetStorageSpace(void);
 
 int DoMultiPlayerStart(void);
 
+int StartNNDemoGame(void);
+
 #endif
